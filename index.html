@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BestWallet - Real-Time Crypto Wallet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #ec4899;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1f35 100%);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0f172a, #1a1f35, #0f172a);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 0;
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--success);
+            margin: 0 2rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Live Dashboard */
+        .live-dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+        }
+
+        .balance-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .balance-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .balance-change {
+            font-size: 0.9rem;
+            color: var(--success);
+        }
+
+        .balance-change.negative {
+            color: var(--danger);
+        }
+
+        .live-update-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .balance-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.3rem;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--card-bg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            height: 300px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-timeframe {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .timeframe-btn {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeframe-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .timeframe-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        /* Real-time Ticker */
+        .ticker-section {
+            background: var(--card-bg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .ticker-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ticker-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ticker-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticker-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            to { transform: scaleY(1); }
+        }
+
+        .ticker-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .ticker-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .ticker-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .ticker-name {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .ticker-name strong {
+            font-size: 0.95rem;
+        }
+
+        .ticker-name span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .ticker-price {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .ticker-change {
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.3rem;
+        }
+
+        .change-animation {
+            display: inline-block;
+            animation: numberChange 0.5s ease;
+        }
+
+        @keyframes numberChange {
+            0% { color: var(--warning); }
+            100% { color: inherit; }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+            margin: 2rem 0 1.5rem 0;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Assets Grid */
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .asset-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .asset-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .asset-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .asset-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .asset-name {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .asset-name strong {
+            font-size: 1rem;
+        }
+
+        .asset-name span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .asset-price {
+            text-align: right;
+        }
+
+        .asset-price .current {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .asset-price .change {
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .price-ticker {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            animation: pulse 2s infinite;
+        }
+
+        .asset-holdings {
+            padding: 1rem 0;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .holding-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .holding-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .holding-label {
+            color: var(--text-secondary);
+        }
+
+        .holding-value {
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+
+        .btn-buy {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .btn-buy:hover {
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-sell {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-sell:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Live Activity Feed */
+        .activity-feed {
+            background: var(--card-bg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            animation: slideIn 0.5s ease;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .activity-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            background: rgba(99, 102, 241, 0.2);
+            flex-shrink: 0;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-type {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .activity-value {
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--dark-bg);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.05);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Alert */
+        .alert {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease;
+            z-index: 300;
+            max-width: 350px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .live-dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .assets-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .balance-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .balance-amount {
+                font-size: 2rem;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .ticker-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .ticker-price, .ticker-change {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-wallet"></i>
+                BestWallet
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Live Market Feed</span>
+            </div>
+            <nav class="nav-buttons">
+                <button class="btn-secondary btn-small" onclick="openSettings()">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="btn-primary btn-small" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Live Dashboard -->
+        <section class="live-dashboard">
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <div class="balance-content">
+                    <div class="balance-label">💼 Total Portfolio Value</div>
+                    <div class="balance-amount">
+                        <span id="totalBalance">$0.00</span>
+                        <span id="balanceChange" class="balance-change positive">+0.00%</span>
+                    </div>
+                    <div class="live-update-badge">
+                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Updating Live
+                    </div>
+
+                    <div class="balance-stats">
+                        <div class="stat">
+                            <div class="stat-label">24h High</div>
+                            <div class="stat-value" id="stat24hHigh">$0.00</div>
+                            <div class="stat-change positive">+2.5%</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">24h Low</div>
+                            <div class="stat-value" id="stat24hLow">$0.00</div>
+                            <div class="stat-change negative">-1.2%</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Holdings</div>
+                            <div class="stat-value" id="statHoldings">5</div>
+                            <div class="stat-change">Assets</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-arrow-up"></i> Send
+                        </button>
+                        <button class="btn-primary" style="flex: 1;">
+                            <i class="fas fa-arrow-down"></i> Receive
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Ticker -->
+            <div class="ticker-section">
+                <div class="ticker-title">
+                    <i class="fas fa-bolt" style="color: var(--warning);"></i> Market Movements
+                </div>
+                <div class="ticker-list" id="tickerContainer">
+                    <!-- Tickers loaded dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Price Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Portfolio Performance</h3>
+                <div class="chart-timeframe">
+                    <button class="timeframe-btn active" onclick="updateChart('1h')">1H</button>
+                    <button class="timeframe-btn" onclick="updateChart('24h')">24H</button>
+                    <button class="timeframe-btn" onclick="updateChart('7d')">7D</button>
+                    <button class="timeframe-btn" onclick="updateChart('30d')">30D</button>
+                </div>
+            </div>
+            <canvas id="priceChart"></canvas>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('assets')">
+                <i class="fas fa-coins"></i> Live Assets
+            </button>
+            <button class="tab" onclick="switchTab('activity')">
+                <i class="fas fa-zap"></i> Live Activity
+            </button>
+            <button class="tab" onclick="switchTab('alerts')">
+                <i class="fas fa-bell"></i> Price Alerts
+            </button>
+        </div>
+
+        <!-- Assets Tab -->
+        <div id="assets" class="tab-content active">
+            <div class="assets-grid" id="assetsContainer">
+                <!-- Assets loaded dynamically -->
+            </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div id="activity" class="tab-content">
+            <div class="activity-feed" id="activityFeed">
+                <!-- Activity items loaded dynamically -->
+            </div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div id="alerts" class="tab-content">
+            <div style="background: var(--card-bg); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 2rem; text-align: center; color: var(--text-secondary);">
+                <i class="fas fa-bell" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                <p>Set price alerts to get notified when your assets reach specific prices</p>
+                <button class="btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-plus"></i> Create Alert
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Real-time Data
+        const cryptoData = {
+            bitcoin: { name: 'Bitcoin', symbol: 'BTC', icon: '₿', price: 42500, change: 2.5, volume: '28.5B', amount: 0.5432 },
+            ethereum: { name: 'Ethereum', symbol: 'ETH', icon: '⟠', price: 2350, change: -1.2, volume: '15.2B', amount: 5.2341 },
+            litecoin: { name: 'Litecoin', symbol: 'LTC', icon: 'Ł', price: 95, change: 1.8, volume: '850M', amount: 15.5 },
+            ripple: { name: 'XRP', symbol: 'XRP', icon: '✕', price: 2.45, change: -0.5, volume: '1.2B', amount: 1000 },
+            cardano: { name: 'Cardano', symbol: 'ADA', icon: '₳', price: 0.75, change: 3.2, volume: '520M', amount: 500 },
+        };
+
+        let chart = null;
+        const activityQueue = [];
+
+        // Initialize
+        function init() {
+            loadAssets();
+            loadTickers();
+            updateBalance();
+            initChart();
+            startLiveUpdates();
+            startActivityFeed();
+        }
+
+        // Load Assets
+        function loadAssets() {
+            const container = document.getElementById('assetsContainer');
+            container.innerHTML = Object.entries(cryptoData).map(([key, asset]) => {
+                const totalValue = (asset.amount * asset.price).toFixed(2);
+                return `
+                    <div class="asset-card">
+                        <div class="asset-header">
+                            <div class="asset-info" style="display: flex; align-items: center; gap: 1rem;">
+                                <div class="asset-icon">${asset.icon}</div>
+                                <div class="asset-name">
+                                    <strong>${asset.name}</strong>
+                                    <span>${asset.symbol}</span>
+                                </div>
+                            </div>
+                            <div class="asset-price">
+                                <div class="current">
+                                    <span>$${asset.price.toLocaleString()}</span>
+                                    <span class="price-ticker">● LIVE</span>
+                                </div>
+                                <div class="change ${asset.change >= 0 ? 'positive' : 'negative'}">
+                                    ${asset.change >= 0 ? '📈' : '📉'} ${asset.change}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="asset-holdings">
+                            <div class="holding-item">
+                                <span class="holding-label">Holdings</span>
+                                <span class="holding-value">${asset.amount} ${asset.symbol}</span>
+                            </div>
+                            <div class="holding-item">
+                                <span class="holding-label">Value</span>
+                                <span class="holding-value">$${totalValue}</span>
+                            </div>
+                            <div class="holding-item">
+                                <span class="holding-label">Volume (24h)</span>
+                                <span class="holding-value">${asset.volume}</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-buy" onclick="showAlert('Buy feature coming soon', 'success')">
+                                <i class="fas fa-arrow-down"></i> Buy
+                            </button>
+                            <button class="btn-sell" onclick="showAlert('Sell feature coming soon', 'success')">
+                                <i class="fas fa-arrow-up"></i> Sell
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load Tickers
+        function loadTickers() {
+            const container = document.getElementById('tickerContainer');
+            container.innerHTML = Object.entries(cryptoData).map(([key, asset]) => `
+                <div class="ticker-item" data-crypto="${key}">
+                    <div class="ticker-info">
+                        <div class="ticker-icon">${asset.icon}</div>
+                        <div class="ticker-name">
+                            <strong>${asset.name}</strong>
+                            <span>${asset.symbol}</span>
+                        </div>
+                    </div>
+                    <div class="ticker-price">$${asset.price.toLocaleString()}</div>
+                    <div class="ticker-change ${asset.change >= 0 ? 'positive' : 'negative'}">
+                        <i class="fas fa-${asset.change >= 0 ? 'arrow-up' : 'arrow-down'}"></i>
+                        <span class="change-animation">${asset.change}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update Balance
+        function updateBalance() {
+            const total = Object.values(cryptoData).reduce((sum, asset) => sum + (asset.amount * asset.price), 0);
+            document.getElementById('totalBalance').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            const balanceChange = (Math.random() * 3 - 1.5).toFixed(2);
+            const changeEl = document.getElementById('balanceChange');
+            changeEl.textContent = (balanceChange >= 0 ? '+' : '') + balanceChange + '%';
+            changeEl.className = 'balance-change ' + (balanceChange >= 0 ? 'positive' : 'negative');
+
+            document.getElementById('stat24hHigh').textContent = '$' + (total * 1.025).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 0});
+            document.getElementById('stat24hLow').textContent = '$' + (total * 0.988).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 0});
+        }
+
+        // Initialize Chart
+        function initChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            // Generate dummy data
+            const labels = [];
+            for (let i = 23; i >= 0; i--) {
+                labels.unshift(i + 'h ago');
+            }
+            
+            const data = labels.map(() => 40000 + Math.random() * 5000);
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data,
+                        borderColor: 'rgb(99, 102, 241)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgb(99, 102, 241)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(99, 102, 241, 0.1)' },
+                            ticks: { color: 'rgb(203, 213, 225)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgb(203, 213, 225)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Chart
+        function updateChart(timeframe) {
+            document.querySelectorAll('.timeframe-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            showAlert(`Switched to ${timeframe} view`, 'success');
+        }
+
+        // Live Updates
+        function startLiveUpdates() {
+            setInterval(() => {
+                // Update prices
+                Object.keys(cryptoData).forEach(key => {
+                    const asset = cryptoData[key];
+                    asset.price *= (1 + (Math.random() - 0.5) * 0.01);
+                    asset.change = (Math.random() * 6 - 3).toFixed(2);
+                });
+                
+                loadAssets();
+                loadTickers();
+                updateBalance();
+            }, 3000);
+        }
+
+        // Activity Feed
+        function startActivityFeed() {
+            const activities = [
+                { type: 'Price Alert', crypto: 'BTC', message: 'Bitcoin reached $42,500', icon: 'fa-bell', color: 'var(--warning)' },
+                { type: 'Transaction', crypto: 'ETH', message: 'Received 0.5 ETH', icon: 'fa-arrow-down', color: 'var(--success)' },
+                { type: 'Market', crypto: 'ADA', message: 'Cardano +3.2% in 1h', icon: 'fa-chart-line', color: 'var(--primary-color)' },
+                { type: 'Alert', crypto: 'LTC', message: 'Volume spike detected', icon: 'fa-zap', color: 'var(--danger)' },
+            ];
+
+            setInterval(() => {
+                const activity = activities[Math.floor(Math.random() * activities.length)];
+                addActivityItem(activity);
+            }, 4000);
+        }
+
+        function addActivityItem(activity) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="activity-icon" style="background: rgba(99, 102, 241, 0.2); color: ${activity.color};">
+                    <i class="fas ${activity.icon}"></i>
+                </div>
+                <div class="activity-details">
+                    <div class="activity-type">${activity.type}</div>
+                    <div class="activity-type" style="font-size: 0.85rem; font-weight: 400; color: var(--text-secondary);">${activity.message}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+                <div class="activity-value" style="color: ${activity.color};">${activity.crypto}</div>
+            `;
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep only last 10 items
+            if (feed.children.length > 10) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // Switch Tab
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Show Alert
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // Settings
+        function openSettings() {
+            showAlert('Settings coming soon', 'success');
+        }
+
+        function logout() {
+            if (confirm('Exit wallet?')) {
+                showAlert('Logging out...', 'success');
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
